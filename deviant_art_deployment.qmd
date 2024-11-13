@@ -1,0 +1,283 @@
+---
+title: "DeviantArt Analytics Dashboard"
+format: 
+  html:
+    theme: flatly
+    toc: true
+    code-fold: true
+execute:
+  echo: false
+  warning: false
+---
+
+# Define key variables and functions
+
+```{r}
+# Load required packages
+#| echo: false
+#| message: false
+#| verbose: false
+library(httr)
+library(googlesheets4)
+library(jsonlite)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(ggplot2)
+library(plotly)
+library(knitr)
+library(wordcloud)
+```
+
+```{r}
+#| echo: false
+
+sheet_id  <- "https://docs.google.com/spreadsheets/d/1hBljlO24m2clVu1HVPgjMkGWK414aIftgu2kh9Q9_ww/edit?gid=0#gid=0"
+```
+
+```{r}
+# Load the data from the Google Sheets
+data <- read_sheet(sheet_id)
+```
+
+# Top Performers over last month
+
+```{r}
+
+kable(
+  data %>% 
+    arrange(desc(Views_1month)) %>%
+    select(Title, Views_1month, Favorites_1month, Comments_1month) %>%
+    head(10),
+  caption = "Top 10 Most Viewed Deviations"
+)
+```
+
+# Engagement by Tags
+
+```{r}
+#| fig-cap: "Word Cloud of Most Successful Tags by Views"
+#| echo: false
+#| message: false
+#| warning: false
+# Split tags and calculate total views for each tag
+tag_views <- data %>%
+  separate_rows(Tags, sep = ",") %>%
+  group_by(Tags) %>%
+  summarize(total_views = sum(Views_1month, na.rm = TRUE)) %>%
+  ungroup()
+
+# Sort by total views to get the most successful tags
+top_tags <- tag_views %>%
+  arrange(desc(total_views))
+
+# Generate a word cloud based on total views
+set.seed(123)  # For reproducibility
+wordcloud(
+  words = top_tags$Tags,
+  freq = top_tags$total_views,
+  min.freq = 1,
+  max.words = 100,
+  random.order = FALSE,
+  colors = brewer.pal(8, "Dark2")
+)
+```
+
+# Engagement per Time of Day
+
+## 48-hours
+
+```{r}
+# Time of day analysis
+engagement_by_time_of_day <- data %>% 
+  mutate(Time_of_Day = factor(Time_of_Day, levels = c(
+    'Morning', 'Afternoon', 'Evening', 'Night'
+  ))) %>%
+  group_by(Time_of_Day) %>%
+  summarise(
+    Avg_Views = mean(Views_48hours, na.rm = TRUE),
+    Avg_Favorites = mean(Favorites_48hours, na.rm = TRUE),
+    Avg_Comments = mean(Comments_48hours, na.rm = TRUE)
+  )
+
+ggplot(engagement_by_time_of_day, aes(x = Time_of_Day)) +
+  geom_bar(aes(y = Avg_Views), stat = "identity", fill = "blue", alpha = 0.6) + 
+  labs(
+    title = "48hours Average Views by Time of Day",
+    x = "Time of Day",
+    y = "Average Views"
+  ) +
+  theme_minimal()
+
+ggplot(engagement_by_time_of_day, aes(x = Time_of_Day)) +
+  geom_bar(aes(y = Avg_Favorites), stat = "identity", fill = "blue", alpha = 0.6) + 
+  labs(
+    title = "48hours Average Favorites by Time of Day",
+    x = "Time of Day",
+    y = "Average Favorites"
+  ) +
+  theme_minimal()
+```
+
+## 1 week
+
+```{r}
+# Time of day analysis
+engagement_by_time_of_day <- data %>% 
+  mutate(Time_of_Day = factor(Time_of_Day, levels = c(
+    'Morning', 'Afternoon', 'Evening', 'Night'
+  ))) %>%
+  group_by(Time_of_Day) %>%
+  summarise(
+    Avg_Views = mean(Views_1week, na.rm = TRUE),
+    Avg_Favorites = mean(Favorites_1week, na.rm = TRUE),
+    Avg_Comments = mean(Comments_1week, na.rm = TRUE)
+  )
+
+ggplot(engagement_by_time_of_day, aes(x = Time_of_Day)) +
+  geom_bar(aes(y = Avg_Views), stat = "identity", fill = "blue", alpha = 0.6) + 
+  labs(
+    title = "1-week Average Views by Time of Day",
+    x = "Time of Day",
+    y = "Average Views"
+  ) +
+  theme_minimal()
+
+ggplot(engagement_by_time_of_day, aes(x = Time_of_Day)) +
+  geom_bar(aes(y = Avg_Favorites), stat = "identity", fill = "blue", alpha = 0.6) + 
+  labs(
+    title = "1-week Average Favorites by Time of Day",
+    x = "Time of Day",
+    y = "Average Favorites"
+  ) +
+  theme_minimal()
+```
+
+## 1 month
+
+```{r}
+# Time of day analysis
+engagement_by_time_of_day <- data %>% 
+  mutate(Time_of_Day = factor(Time_of_Day, levels = c(
+    'Morning', 'Afternoon', 'Evening', 'Night'
+  ))) %>%
+  group_by(Time_of_Day) %>%
+  summarise(
+    Avg_Views = mean(Views_1month, na.rm = TRUE),
+    Avg_Favorites = mean(Favorites_1month, na.rm = TRUE),
+    Avg_Comments = mean(Comments_1month, na.rm = TRUE)
+  )
+
+ggplot(engagement_by_time_of_day, aes(x = Time_of_Day)) +
+  geom_bar(aes(y = Avg_Views), stat = "identity", fill = "blue", alpha = 0.6) + 
+  labs(
+    title = "1-month Average Views by Time of Day",
+    x = "Time of Day",
+    y = "Average Views"
+  ) +
+  theme_minimal()
+
+ggplot(engagement_by_time_of_day, aes(x = Time_of_Day)) +
+  geom_bar(aes(y = Avg_Favorites), stat = "identity", fill = "blue", alpha = 0.6) + 
+  labs(
+    title = "1-month Average Favorites by Time of Day",
+    x = "Time of Day",
+    y = "Average Favorites"
+  ) +
+  theme_minimal()
+```
+
+# Style and Engagement
+
+## 48-hours
+
+```{r}
+# Time of day analysis
+engagement_by_Style <- data %>%
+  group_by(Style) %>%
+  summarise(
+    Avg_Views = mean(Views_48hours, na.rm = TRUE),
+    Avg_Favorites = mean(Favorites_48hours, na.rm = TRUE),
+    Avg_Comments = mean(Comments_48hours, na.rm = TRUE)
+  )
+
+ggplot(engagement_by_Style, aes(x = Style)) +
+  geom_bar(aes(y = Avg_Views), stat = "identity", fill = "blue", alpha = 0.6) + 
+  labs(
+    title = "48hours Average Views by Style",
+    x = "Style",
+    y = "Average Views"
+  ) +
+  theme_minimal()
+
+ggplot(engagement_by_Style, aes(x = Style)) +
+  geom_bar(aes(y = Avg_Favorites), stat = "identity", fill = "blue", alpha = 0.6) + 
+  labs(
+    title = "48hours Average Favorites by Style",
+    x = "Style",
+    y = "Average Favorites"
+  ) +
+  theme_minimal()
+```
+
+## 1 week
+
+```{r}
+# Time of day analysis
+engagement_by_Style <- data %>%
+  group_by(Style) %>%
+  summarise(
+    Avg_Views = mean(Views_1week, na.rm = TRUE),
+    Avg_Favorites = mean(Favorites_1week, na.rm = TRUE),
+    Avg_Comments = mean(Comments_1week, na.rm = TRUE)
+  )
+
+ggplot(engagement_by_Style, aes(x = Style)) +
+  geom_bar(aes(y = Avg_Views), stat = "identity", fill = "blue", alpha = 0.6) + 
+  labs(
+    title = "1week Average Views by Style",
+    x = "Style",
+    y = "Average Views"
+  ) +
+  theme_minimal()
+
+ggplot(engagement_by_Style, aes(x = Style)) +
+  geom_bar(aes(y = Avg_Favorites), stat = "identity", fill = "blue", alpha = 0.6) + 
+  labs(
+    title = "1week Average Favorites by Style",
+    x = "Style",
+    y = "Average Favorites"
+  ) +
+  theme_minimal()
+```
+
+## 1 month
+
+```{r}
+# Time of day analysis
+engagement_by_Style <- data %>%
+  group_by(Style) %>%
+  summarise(
+    Avg_Views = mean(Views_1month, na.rm = TRUE),
+    Avg_Favorites = mean(Favorites_1month, na.rm = TRUE),
+    Avg_Comments = mean(Comments_1month, na.rm = TRUE)
+  )
+
+ggplot(engagement_by_Style, aes(x = Style)) +
+  geom_bar(aes(y = Avg_Views), stat = "identity", fill = "blue", alpha = 0.6) + 
+  labs(
+    title = "1month Average Views by Style",
+    x = "Style",
+    y = "Average Views"
+  ) +
+  theme_minimal()
+
+ggplot(engagement_by_Style, aes(x = Style)) +
+  geom_bar(aes(y = Avg_Favorites), stat = "identity", fill = "blue", alpha = 0.6) + 
+  labs(
+    title = "1month Average Favorites by Style",
+    x = "Style",
+    y = "Average Favorites"
+  ) +
+  theme_minimal()
+```
