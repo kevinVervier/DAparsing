@@ -22,7 +22,7 @@ jobs:
       - name: Install system dependencies (including compilers)
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential gfortran libcurl4-openssl-dev libssl-dev libxml2-dev
+          sudo apt-get install -y build-essential gfortran libcurl4-openssl-dev libssl-dev libxml2-dev libatlas-base-dev liblapack-dev
 
         
       - name: Install renv and restore environment
