@@ -22,22 +22,6 @@ jobs:
         with:
           r-version: '4.3'
 
-      # Step 2: Cache R packages
-      - name: Cache R packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/R
-          key: ${{ runner.os }}-R-${{ hashFiles('**/renv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-R-
-
-# Step 3: Set CRAN repository and renv config
-      - name: Set CRAN repository and renv config
-        run: |
-          echo "RENV_CONFIG_REPOS_OVERRIDE=https://packagemanager.posit.co/cran/2023-01-01" >> $GITHUB_ENV
-          echo "RENV_DOWNLOAD_METHOD=auto" >> $GITHUB_ENV
-          echo "RENV_CONFIG_REPOS_DISABLE_TARGET_REPOS=TRUE" >> $GITHUB_ENV
-
       - name: Install system dependencies
         run: |
           sudo apt-get update
