@@ -8,52 +8,16 @@ on:
 jobs:
   render:
     runs-on: ubuntu-latest
-    container: rocker/r-ver:4.3.3  # Docker container with R 4.3.3
-
     steps:
       # Step 1: Check out the repository
       - name: Check out repository
         uses: actions/checkout@v3
 
-      # Step 2: Cache R packages to speed up renv restore
-      - name: Cache R packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/R
-          key: ${{ runner.os }}-R-${{ hashFiles('**/renv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-R-
+      # Step 2: Build Docker image
+      - name: Build Docker image
+        run: docker build -t quarto-render .
 
-      - name: Install additional system dependencies
+      # Step 3: Run Docker container and render Quarto document
+      - name: Render Quarto document
         run: |
-          apt-get update
-          apt-get install -y libxml2-dev libcurl4-openssl-dev libssl-dev
-          apt-get install -y gfortran libblas-dev liblapack-dev  # Extra dependencies for Matrix package
-
-      # Step 4: Set up CRAN repository and renv configuration for binary packages
-      - name: Set up CRAN repository and renv configuration
-        run: |
-          echo "RENV_CONFIG_REPOS_OVERRIDE=https://packagemanager.rstudio.com/cran/__linux__/focal/latest" >> $GITHUB_ENV
-          echo "RENV_CONFIG_REPOS_DISABLE_TARGET_REPOS=TRUE" >> $GITHUB_ENV
-          echo "RENV_CONFIG_INSTALL_FROM_SOURCE=FALSE" >> $GITHUB_ENV
-
-      # Step 5: Install renv and restore the environment
-      - name: Install renv and restore environment
-        run: |
-          R -e "install.packages('renv')"
-          R -e "renv::restore()"
-
-      # Step 6: Render the Quarto document
-          
-      - name: Render Quarto Document
-        run: quarto render deviant_art_deployment.qmd --to html
-
-      - name: Commit and push changes
-        run: |
-          git config --local user.email "kevin.vervier04@gmail.com"
-          git config --local user.name "GitHub Actions"
-          git add -A
-          git commit -m "Automated render of Quarto document"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace quarto-render R -e "quarto::quarto_render('deviant_art_deployment.qmd')"
