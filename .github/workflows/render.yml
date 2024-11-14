@@ -42,6 +42,17 @@ jobs:
             libpng-dev \
             libc6-dev \
             libgomp1
+
+      - name: Set CRAN repository and renv config
+        run: |
+          echo "RENV_CONFIG_REPOS_OVERRIDE=https://packagemanager.posit.co/cran/2023-01-01" >> $GITHUB_ENV
+          echo "RENV_DOWNLOAD_METHOD=auto" >> $GITHUB_ENV
+          echo "RENV_CONFIG_REPOS_DISABLE_TARGET_REPOS=TRUE" >> $GITHUB_ENV
+          echo "RENV_CONFIG_INSTALL_FROM_SOURCE=Matrix,FALSE" >> $GITHUB_ENV
+
+      - name: Install Matrix package binary
+        run: |
+          R -e "install.packages('Matrix', type = 'binary')"
           
 # Step 4: Install renv and restore environment
       - name: Install renv and restore environment
