@@ -45,9 +45,9 @@ jobs:
       - name: Install renv and restore environment
         run: |
           R -e "install.packages('renv')"
-          R -e "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/__linux__/jammy/latest'))"  # Replace 'jammy' with the appropriate distro if needed
+          R -e "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/latest'))"
           R -e "renv::restore()"
-
+          
       - name: Render Quarto Document
         run: quarto render deviant_art_deployment.qmd --to html
 
