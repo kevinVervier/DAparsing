@@ -10,8 +10,6 @@ execute:
   warning: false
 ---
 
-# Define key variables and functions
-
 ```{r}
 # Load required packages
 #| echo: false
