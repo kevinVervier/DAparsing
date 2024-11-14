@@ -13,23 +13,50 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
+      # Step 2: Cache R packages
+      - name: Cache R packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/R
+          key: ${{ runner.os }}-R-${{ hashFiles('**/renv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-R-
+            
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.3'
 
-      - name: Install system dependencies (including compilers)
+      - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential gfortran libcurl4-openssl-dev libssl-dev libxml2-dev
-
-        
+          sudo apt-get install -y \
+            build-essential \
+            gfortran \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libxml2-dev \
+            libatlas-base-dev \
+            liblapack-dev \
+            libblas-dev \
+            libbz2-dev \
+            libz-dev \
+            liblzma-dev \
+            libtiff-dev \
+            libjpeg-dev \
+            libpng-dev \
+            libc6-dev \
+            libgomp1
+          
       - name: Install renv and restore environment
         run: |
-          R -e "install.packages('renv')"   # Install renv
-          R -e "renv::restore()"             # Restore the environment from renv.lock
-
+          R -e "install.packages('renv')"
+          R -e "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/latest'))"
+          R -e "renv::restore()"
+          
       - name: Render Quarto Document
         run: quarto render deviant_art_deployment.qmd --to html
 
