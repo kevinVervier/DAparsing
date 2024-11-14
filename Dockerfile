@@ -19,7 +19,7 @@ RUN wget -qO- https://quarto.org/download/latest/quarto-linux-amd64.deb > quarto
     && rm quarto.deb
 
 # Install required R packages and their dependencies
-RUN R -e "install.packages(c('ggplot2', 'dplyr', 'lubridate', 'wordcloud2', 'httr', 'jsonlite'), dependencies = TRUE)"
+RUN R -e "install.packages(c('ggplot2', 'dplyr', 'lubridate', 'wordcloud2', 'httr', 'jsonlite', 'quarto'), dependencies = TRUE)"
 
 # Set the default working directory
 WORKDIR /workspace
