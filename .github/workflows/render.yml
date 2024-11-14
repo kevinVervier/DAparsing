@@ -40,9 +40,8 @@ jobs:
        
       - name: Install devtools and specific version of MASS
         run: |
-          R -e "install.packages('devtools', repos='https://cloud.r-project.org')"   # Install devtools
-          R -e "install.packages('renv', repos='https://cloud.r-project.org')"       # Install renv
-          R -e "devtools::install_version('MASS', version = '7.3-53')"               # Install specific version of MASS
+          R -e "install.packages('remotes')"  # Install remotes
+          R -e "remotes::install_version('MASS', version = '7.3-53')"  # Install specific version of MASS
 
       - name: Install renv and restore environment
         run: |
