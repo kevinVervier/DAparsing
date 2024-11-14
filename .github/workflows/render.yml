@@ -13,6 +13,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
+      # Step 2: Cache R packages
+      - name: Cache R packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/R
+          key: ${{ runner.os }}-R-${{ hashFiles('**/renv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-R-
+            
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         
@@ -41,7 +50,7 @@ jobs:
             libpng-dev \
             libc6-dev \
             libgomp1
-       
+          
       - name: Install renv and restore environment
         run: |
           R -e "install.packages('renv')"
