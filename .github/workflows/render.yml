@@ -15,6 +15,12 @@ jobs:
       - name: Build Docker image
         run: docker build -t quarto-render .
 
+      # Authenticate with Google Sheets using service account credentials
+      - name: Authenticate with Google Sheets
+        run: |
+          echo "${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" > /tmp/service-account.json
+          R -e "library(googlesheets4); gs4_auth(path = '/tmp/service-account.json')"
+
       - name: Render Quarto document
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace quarto-render R -e "quarto::quarto_render('deviant_art_deployment.qmd')"
