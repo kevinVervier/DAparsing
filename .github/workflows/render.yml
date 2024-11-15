@@ -1,71 +1,44 @@
 name: Render Quarto Document
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: "0 0 * * *" # Runs daily at midnight UTC; adjust as needed
-  workflow_dispatch: # Allows for manual triggering of the action
+    - cron: '0 0 * * *'  # Daily at midnight
 
 jobs:
   render:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      # Step 2: Cache R packages
-      - name: Cache R packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/R
-          key: ${{ runner.os }}-R-${{ hashFiles('**/renv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-R-
-            
-      - name: Set up Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-        
-      - name: Set up R
-        uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: '4.3'
-
-      - name: Install system dependencies
+      - name: Confirm Google Sheet Credentials Secret Exists
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            gfortran \
-            libcurl4-openssl-dev \
-            libssl-dev \
-            libxml2-dev \
-            libatlas-base-dev \
-            liblapack-dev \
-            libblas-dev \
-            libbz2-dev \
-            libz-dev \
-            liblzma-dev \
-            libtiff-dev \
-            libjpeg-dev \
-            libpng-dev \
-            libc6-dev \
-            libgomp1
-          
-      - name: Install renv and restore environment
-        run: |
-          R -e "install.packages('renv')"
-          R -e "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/latest'))"
-          R -e "renv::restore()"
-          
-      - name: Render Quarto Document
-        run: quarto render deviant_art_deployment.qmd --to html
-
-      - name: Commit and push changes
-        run: |
-          git config --local user.email "kevin.vervier04@gmail.com"
-          git config --local user.name "GitHub Actions"
-          git add -A
-          git commit -m "Automated render of Quarto document"
-          git push
+          if [ -n "$GOOGLE_SHEET_CREDENTIALS" ]; then
+            echo "Google Sheet Credentials Secret is set."
+          else
+            echo "Google Sheet Credentials Secret is NOT set."
+          fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOOGLE_SHEET_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        run: docker build -t quarto-render:latest .
+
+      - name: Render Quarto Document
+        run: |
+          echo "$GOOGLE_SHEET_CREDENTIALS" > /tmp/service-account.json
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            -e GOOGLE_SHEET_CREDENTIALS="$GOOGLE_SHEET_CREDENTIALS" \
+            quarto-render:latest \
+            bash -c "
+              R -e 'library(googlesheets4); gs4_auth(path = \"/tmp/service-account.json\")' && \
+              quarto render deviant_art_deployment.qmd --to html
+            "
+        env:
+          GOOGLE_SHEET_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
