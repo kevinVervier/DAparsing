@@ -28,16 +28,17 @@ jobs:
       - name: Build Docker image
         run: docker build -t quarto-render:latest .
 
-      # Step to run the Docker image and execute commands inside it
-      - name: Run Quarto Render in Docker
+      - name: Render Quarto Document
         run: |
+          echo "$GOOGLE_SHEET_CREDENTIALS" > /tmp/service-account.json
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
-            -e "GOOGLE_SHEET_CREDENTIALS=${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" \
+            -e GOOGLE_SHEET_CREDENTIALS="$GOOGLE_SHEET_CREDENTIALS" \
             quarto-render:latest \
             bash -c "
-              echo \"$GOOGLE_SHEET_CREDENTIALS\" > /tmp/service-account.json && \
               R -e 'library(googlesheets4); gs4_auth(path = \"/tmp/service-account.json\")' && \
               quarto render deviant_art_deployment.qmd --to html
             "
+        env:
+          GOOGLE_SHEET_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
