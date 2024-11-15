@@ -12,6 +12,16 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
+      - name: Confirm Google Sheet Credentials Secret Exists
+        run: |
+          if [ -n "$GOOGLE_SHEET_CREDENTIALS" ]; then
+            echo "Google Sheet Credentials Secret is set."
+          else
+            echo "Google Sheet Credentials Secret is NOT set."
+          fi
+        env:
+          GOOGLE_SHEET_CREDENTIALS: ${{ secrets.GOOGLE_SHEET_CREDENTIALS }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
