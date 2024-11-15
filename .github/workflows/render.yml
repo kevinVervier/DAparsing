@@ -24,7 +24,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
-            -e GOOGLE_SHEET_CREDENTIALS="${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" \
+            -e "GOOGLE_SHEET_CREDENTIALS=${{ secrets.GOOGLE_SHEET_CREDENTIALS }}" \
             quarto-render:latest \
             bash -c "
               echo \"$GOOGLE_SHEET_CREDENTIALS\" > /tmp/service-account.json && \
